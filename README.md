@@ -65,8 +65,7 @@ Dieses Add-on erzeugt automatisch MQTT Topics im Format:
 
 ### Steuerung per MQTT:
 
-```bash
-mosquitto_pub -h localhost -t dabbsson/command/109 -m true
+``bash mosquitto_pub -h localhost -t dabbsson/command/109 -m true 
 
 
 ### 🔍 Device ID & Local Key finden
