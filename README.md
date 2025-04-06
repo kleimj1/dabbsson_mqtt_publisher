@@ -1,99 +1,110 @@
 # 🚀 Dabbsson MQTT Publisher – Home Assistant Add-on
 
-Dieses Add-on liest über das Tuya-Protokoll (lokal via WLAN) **DPS-Werte vom Dabbsson DBS2300** und veröffentlicht diese regelmäßig via **MQTT Discovery** in Home Assistant.
+Dieses Add-on liest über das Tuya-Protokoll (lokal via WLAN) **DPS-Werte vom Dabbsson DBS2300** aus und veröffentlicht diese regelmäßig via **MQTT Discovery** an Home Assistant.
 
-Damit werden **automatisch Sensoren & Schalter** erzeugt – vollständig lokal, ohne Tuya Cloud oder Bluetooth!
+Damit werden **automatisch Sensoren & Schalter** erstellt – komplett lokal, ohne Tuya-Cloud oder Bluetooth!
 
 ---
 
-## ✅ Features
+## ✅ Funktionen
 
 - 📡 Liest alle bekannten DPS-Werte (auch versteckte)
-- 🔁 Veröffentlicht alle Daten automatisch über MQTT Discovery
-- 🔧 Unterstützung für beschreibbare Schalter (AC Out, 5V, 12V etc.)
-- 🖥 Konfigurierbar über Add-on UI
-- 🧠 Automatische Wiederverbindung & Logging
+- 🔄 MQTT Discovery: automatische Sensor-/Schalter-Erstellung
+- 🔧 Unterstützung für steuerbare Entitäten (z. B. AC Out, 12V, Zielwert)
+- 🧠 Robuste Wiederverbindung & Logging
+- 🖥 UI-basierte Konfiguration
 
 ---
 
 ## 📦 Installation in Home Assistant
 
-1. Navigiere in Home Assistant zu **Einstellungen → Add-ons → Add-on Store**
-2. Klicke rechts oben auf **„Add-on Repository hinzufügen“**
-3. Füge folgendes Repository hinzu:
+1. Öffne Home Assistant → **Einstellungen → Add-ons → Add-on Store**
+2. Klicke oben rechts auf **„Add-on Repository hinzufügen“**
+3. Füge dieses Repository ein:
 
 https://github.com/kleimj1/dabbsson_mqtt_publisher
 
 
-Oder klick direkt hier:
+Oder klicke direkt hier:
 
-[![Add-on installieren](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https://github.com/kleimj1/dabbsson_dbs2300)
+[![Add-on installieren](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https://github.com/kleimj1/dabbsson_mqtt_publisher)
 
-4. Wähle **`Dabbsson MQTT Publisher`** aus der Liste und installiere das Add-on
-5. Starte das Add-on nach Eingabe der Konfiguration
+4. Danach: `Dabbsson MQTT Publisher` installieren & konfigurieren
 
 ---
 
-## ⚙️ Konfiguration (UI-basiert)
+## ⚙️ Konfiguration (UI)
 
 | Feld                   | Beschreibung                                  |
 |------------------------|----------------------------------------------|
 | `device_id`            | Tuya Device ID deines DBS2300                |
 | `local_key`            | Tuya Local Key                               |
 | `ip`                   | Lokale IP-Adresse (z. B. `192.168.178.30`)    |
-| `mqtt_host`            | MQTT Broker (z. B. `core-mosquitto`)         |
+| `mqtt_host`            | MQTT Broker Hostname/IP (z. B. `core-mosquitto`) |
 | `mqtt_port`            | Meist `1883`                                 |
 | `mqtt_topic`           | z. B. `dabbsson`                              |
 | `mqtt_discovery_prefix`| Meist `homeassistant`                        |
 
 ---
 
-## 📡 MQTT Beispiel-Topics (automatisch erstellt)
+## 📡 MQTT Topics & Home Assistant Discovery
 
-| Topic                          | Beschreibung             | Schreibbar |
-|--------------------------------|--------------------------|------------|
-| `dabbsson/status/1`           | SoC Batterie [%]         | ❌         |
-| `dabbsson/status/10`          | Temperatur [°C]          | ❌         |
-| `dabbsson/status/109`         | AC Out AN                | ✅         |
-| `dabbsson/status/111`         | USB 5V AN                | ✅         |
-| `dabbsson/status/112`         | DC 12V AN                | ✅         |
-| `dabbsson/status/123`         | Zielwert AC-Ladung [%]   | ✅         |
-| `dabbsson/status/145`         | Netzspannung             | ✅         |
+Dieses Add-on erzeugt automatisch MQTT Topics im Format:
 
-Werte setzen mit z. B.:
+### **Beispielhafte Topics:**
+
+| MQTT Topic                  | Beschreibung               | Schreibbar |
+|----------------------------|----------------------------|------------|
+| `dabbsson/status/1`        | SoC Batterie [%]           | ❌         |
+| `dabbsson/status/10`       | Temperatur [°C]            | ❌         |
+| `dabbsson/status/109`      | AC Out AN                  | ✅         |
+| `dabbsson/status/111`      | USB 5V AN                  | ✅         |
+| `dabbsson/status/112`      | DC 12V AN                  | ✅         |
+| `dabbsson/status/123`      | AC Zielwert %              | ✅         |
+| `dabbsson/status/145`      | Netzspannung               | ✅         |
+
+### Steuerung per MQTT:
 
 ```bash
 mosquitto_pub -h localhost -t dabbsson/command/109 -m true
 
-🔐 So bekommst du device_id und local_key
-Registriere dich bei https://iot.tuya.com
 
-Erstelle ein Cloud-Projekt und verknüpfe dein Smart Life Konto
+### 🔍 Device ID & Local Key finden
+Erstelle ein Tuya Cloud Projekt: https://iot.tuya.com
 
-Gerät hinzufügen → Device-ID & Local-Key kopieren
+Verknüpfe dein Smart Life Konto
 
-👀 Beispielhafte Entitäten in HA
-Nach dem Start erscheinen automatisch z. B.:
+Gerät → Device-ID & Local-Key einsehen
 
-sensor.dabbsson_temperatur
+👉 Alternativ über Tools wie tuya-cli
+
+### 👀 Typische Entitäten in Home Assistant
+Nach der Installation erscheinen z. B.:
 
 sensor.dabbsson_soc_batterie_1
+
+sensor.dabbsson_temperatur
 
 switch.dabbsson_ac_out_an
 
 switch.dabbsson_usb_5v_an
 
-🧠 Nützliches
-Add-on läuft dauerhaft und sendet Daten alle 5 Sekunden
+### 🧠 Hinweise
+Das Add-on läuft dauerhaft und liest alle 5 Sekunden
 
-Schreibbare Entitäten lassen sich über MQTT steuern
+MQTT-Verbindung wird automatisch aufrechterhalten
 
-MQTT Discovery erfolgt vollständig automatisch
+Discovery erfolgt über den Prefix homeassistant
 
-Logging erfolgt in Echtzeit im Add-on Protokoll
+DPS-Definition & Metadaten in dps_metadata.py
 
-❤️ Mitmachen
-Fehlt dir ein Sensor oder möchtest du helfen?
-➡️ Erstelle ein GitHub Issue oder Pull Request!
+### ❤️ Mitmachen
+Fehlt dir ein DPS-Wert oder möchtest du helfen?
 
-🧠 Viel Spaß mit deinem Dabbsson in Home Assistant!
+➡️ Erstelle ein GitHub Issue oder einen Pull Request unter:
+https://github.com/kleimj1/dabbsson_mqtt_publisher
+
+### 🧠 Viel Spaß mit deinem Dabbsson in Home Assistant!
+yaml
+Kopieren
+Bearbeiten
