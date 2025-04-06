@@ -1,14 +1,17 @@
-# Dockerfile
-ARG BUILD_FROM=ghcr.io/hassio-addons/base-python:10.0.0
-FROM ${BUILD_FROM}
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
-# Install Python dependencies
-RUN pip install --no-cache-dir tinytuya paho-mqtt
+ENV LANG C.UTF-8
 
-# Copy Add-on files
+# Installiere Python3 und pip
+RUN apt-get update && apt-get install -y python3 python3-pip
+
+# Installiere Python-Abhängigkeiten
+RUN pip3 install --no-cache-dir tinytuya paho-mqtt
+
+# Dateien kopieren
 COPY run.sh /run.sh
 COPY mqtt_publisher.py /mqtt_publisher.py
 RUN chmod a+x /run.sh
 
-# Start
-CMD ["/run.sh"]
+CMD [ "/run.sh" ]
