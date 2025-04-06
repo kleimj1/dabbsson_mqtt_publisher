@@ -77,6 +77,8 @@ Gerät → Device-ID & Local-Key einsehen
 
 👉 Alternativ über Tools wie tuya-cli
 
+---
+
 ### 👀 Typische Entitäten in Home Assistant
 Nach der Installation erscheinen z. B.:
 
@@ -88,6 +90,8 @@ switch.dabbsson_ac_out_an
 
 switch.dabbsson_usb_5v_an
 
+---
+
 ### 🧠 Hinweise
 Das Add-on läuft dauerhaft und liest alle 5 Sekunden
 
@@ -97,13 +101,19 @@ Discovery erfolgt über den Prefix homeassistant
 
 DPS-Definition & Metadaten in dps_metadata.py
 
+---
+
 ### ❤️ Mitmachen
 Fehlt dir ein DPS-Wert oder möchtest du helfen?
 
 ➡️ Erstelle ein GitHub Issue oder einen Pull Request unter:
 https://github.com/kleimj1/dabbsson_mqtt_publisher
 
+---
+
 ### 🧠 Viel Spaß mit deinem Dabbsson in Home Assistant!
 yaml
 Kopieren
 Bearbeiten
+
+---
