@@ -1,7 +1,7 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# Installiere grundlegende Abhängigkeiten und pip
+# Installiere Python 3 und pip
 RUN apk add --no-cache \
     python3 \
     py3-pip \
@@ -9,18 +9,16 @@ RUN apk add --no-cache \
     musl-dev \
     libffi-dev \
     openssl-dev \
-    python3-dev
+    python3-dev && \
+    python3 -m ensurepip && \
+    pip3 install --no-cache-dir --upgrade pip
 
-# Installiere Python-Pakete
+# Installiere Python-Abhängigkeiten
 RUN pip3 install --no-cache-dir tinytuya paho-mqtt
 
-# Kopiere Skripte ins Image
-COPY run.sh /run.sh
+# Kopiere Python-Dateien
 COPY mqtt_publisher.py /mqtt_publisher.py
 COPY dps_metadata.py /dps_metadata.py
 
-# Mach das Skript ausführbar
-RUN chmod a+x /run.sh
-
-# Starte das Skript
-CMD [ "/run.sh" ]
+# Starte direkt ohne Shell-Skript
+CMD [ "python3", "/mqtt_publisher.py" ]
