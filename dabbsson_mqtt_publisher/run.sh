@@ -10,8 +10,7 @@ export MQTT_DISCOVERY_PREFIX=$(jq -r .mqtt_discovery_prefix /data/options.json)
 #!/usr/bin/with-contenv bashio
 
 echo "🔧 Installiere Python-Abhängigkeiten..."
-pip3 install --no-cache-dir tinytuya paho-mqtt
-
+pip3 install --no-cache-dir --root-user-action=ignore tinytuya paho-mqtt
 echo "🚀 Starte MQTT Publisher..."
 
 /usr/bin/python3 /mqtt_publisher.py
