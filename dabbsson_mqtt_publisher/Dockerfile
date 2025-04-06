@@ -3,12 +3,8 @@ FROM $BUILD_FROM
 
 ENV LANG C.UTF-8
 
-# System-Pakete und Python installieren
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip python3-dev gcc libc-dev
-
-# Python-Abhängigkeiten installieren
-RUN pip3 install --no-cache-dir tinytuya paho-mqtt
+# Python-Abhängigkeiten
+RUN pip install --no-cache-dir tinytuya paho-mqtt
 
 # Skripte und Startdatei kopieren
 COPY run.sh /run.sh
