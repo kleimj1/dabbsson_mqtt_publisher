@@ -14,7 +14,7 @@ RUN apk add --no-cache \
     pip3 install --no-cache-dir --upgrade pip
 
 # Installiere Python-Abhängigkeiten
-#RUN pip3 install --no-cache-dir tinytuya paho-mqtt
+RUN pip3 install --no-cache-dir --root-user-action=ignore tinytuya paho-mqtt
 
 # Kopiere Python-Dateien
 COPY mqtt_publisher.py /mqtt_publisher.py
