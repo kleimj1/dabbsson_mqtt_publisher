@@ -1,7 +1,7 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# Installiere Python 3 und pip
+# Systemabhängigkeiten installieren
 RUN apk add --no-cache \
     python3 \
     py3-pip \
@@ -9,18 +9,23 @@ RUN apk add --no-cache \
     musl-dev \
     libffi-dev \
     openssl-dev \
-    python3-dev && \
-    python3 -m ensurepip && \
-    pip3 install --no-cache-dir --upgrade pip
+    python3-dev
 
-# Installiere Python-Abhängigkeiten
-RUN pip3 install --no-cache-dir --root-user-action=ignore tinytuya paho-mqtt
+# Erstelle ein virtuelles Python-Environment
+ENV VENV_PATH=/data/venv
+RUN python3 -m venv $VENV_PATH
 
-# Kopiere Python-Dateien
+# Installiere Abhängigkeiten im venv
+RUN $VENV_PATH/bin/pip install --no-cache-dir --upgrade pip && \
+    $VENV_PATH/bin/pip install --no-cache-dir tinytuya paho-mqtt
+
+# Kopiere Skripte
 COPY mqtt_publisher.py /mqtt_publisher.py
 COPY dps_metadata.py /dps_metadata.py
-
 COPY run.sh /run.sh
-RUN chmod a+x /run.sh
-CMD [ "/run.sh" ]
 
+# Rechte setzen
+RUN chmod +x /run.sh
+
+# Starte das Script
+CMD ["/run.sh"]
