@@ -1,7 +1,7 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# Installiere benötigte Pakete
+# Systempakete installieren (ohne bashio!)
 RUN apk add --no-cache \
     python3 \
     py3-pip \
@@ -10,26 +10,23 @@ RUN apk add --no-cache \
     libffi-dev \
     openssl-dev \
     python3-dev \
-    bashio \
     jq
 
-# Erstelle virtuelle Umgebung
-RUN python3 -m venv /opt/venv
+# Virtuelle Umgebung anlegen und aktivieren
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
 
-# Setze Pfad zur venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Upgrade pip und installiere Abhängigkeiten in venv
+# Python-Abhängigkeiten installieren
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir tinytuya paho-mqtt
 
-# Kopiere Python-Dateien
+# Skripte und Metadaten kopieren
 COPY mqtt_publisher.py /mqtt_publisher.py
 COPY dps_metadata.py /dps_metadata.py
-
-# Kopiere Startskript
 COPY run.sh /run.sh
+
+# Skript ausführbar machen
 RUN chmod a+x /run.sh
 
-# Start
+# Startkommando
 CMD [ "/run.sh" ]
