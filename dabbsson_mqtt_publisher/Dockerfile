@@ -12,6 +12,8 @@ RUN apk add --no-cache \
     python3-dev
 
 # Erstelle ein virtuelles Python-Environment
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV VENV_PATH=/data/venv
 RUN python3 -m venv $VENV_PATH
 
