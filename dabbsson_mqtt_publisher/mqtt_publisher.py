@@ -79,17 +79,12 @@ def publish_discovery(dps_key, value):
             }
         else:
             component = "sensor"
-            payload = {
-                "state_topic": state_topic,
-                "icon": "mdi:chart-box-outline"
-            }
+            payload = {"state_topic": state_topic, "icon": "mdi:chart-box-outline"}
     else:
         component = "sensor"
-        payload = {
-            "state_topic": state_topic,
-            "icon": "mdi:chart-box-outline"
-        }
+        payload = {"state_topic": state_topic, "icon": "mdi:chart-box-outline"}
 
+    # Zusätzliche Geräteklassen (für HA UI)
     if dtype == "int" and not writable:
         if dps_key == "10":
             payload.update({"unit_of_measurement": "°C", "device_class": "temperature"})
@@ -109,12 +104,12 @@ def publish_discovery(dps_key, value):
     topic = f"{MQTT_DISCOVERY_PREFIX}/{component}/dabbsson/{dps_key}/config"
     client.publish(topic, json.dumps(payload), retain=True)
 
-# Callback bei MQTT-Connect
+# MQTT-Callback: verbunden
 def on_connect(client, userdata, flags, rc):
     print(f"✅ MQTT verbunden (Code {rc})")
     client.subscribe(f"{MQTT_COMMAND_TOPIC}/#")
 
-# Callback bei MQTT-Nachricht
+# MQTT-Callback: neue Nachricht
 def on_message(client, userdata, msg):
     try:
         dps_key = msg.topic.split("/")[-1]
@@ -125,7 +120,8 @@ def on_message(client, userdata, msg):
         raw = msg.payload.decode()
         value = json.loads(raw)
         print(f"➡️ Befehl für DPS {dps_key}: {value}")
-        device.set_dps({dps_key: value})
+        print(f"📤 Sende an Gerät: set_value({dps_key}, {value})")
+        device.set_value(dps_key, value)
     except Exception as e:
         print(f"❌ Fehler beim Verarbeiten von {msg.topic}: {e}")
 
@@ -133,7 +129,7 @@ client.on_connect = on_connect
 client.on_message = on_message
 client.connect(MQTT_HOST, MQTT_PORT, 60)
 
-# Daten-Publishing-Schleife
+# Werte regelmäßig lesen und publizieren
 def publish_loop():
     while True:
         try:
@@ -148,5 +144,6 @@ def publish_loop():
             print(f"⚠️ Fehler beim Abrufen der Daten: {e}")
             time.sleep(10)
 
+# Starte Schleifen
 threading.Thread(target=publish_loop, daemon=True).start()
 client.loop_forever()
