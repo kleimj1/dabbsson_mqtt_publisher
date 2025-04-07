@@ -25,8 +25,4 @@ COPY mqtt_publisher.py /mqtt_publisher.py
 COPY dps_metadata.py /dps_metadata.py
 COPY run.sh /run.sh
 
-# Skript ausführbar machen
-RUN chmod a+x /run.sh
-
-# Startkommando
-CMD [ "/run.sh" ]
+# Final CMD is omitted because s6 handles init
