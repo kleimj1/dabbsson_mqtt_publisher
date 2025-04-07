@@ -4,7 +4,7 @@ FROM $BUILD_FROM
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-RUN apk add --no-cache python3 py3-pip gcc musl-dev libffi-dev openssl-dev python3-dev && \
+RUN apk add --no-cache python3 bashio py3-pip gcc musl-dev libffi-dev openssl-dev python3-dev && \
     python3 -m venv $VIRTUAL_ENV && \
     pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir tinytuya paho-mqtt
