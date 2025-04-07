@@ -13,4 +13,4 @@ export MQTT_USER=$(jq -r .mqtt_user /data/options.json)
 export MQTT_PASSWORD=$(jq -r .mqtt_password /data/options.json)
 
 # Starte Python-Skript aus venv
-exec /venv/bin/python /mqtt_publisher.py
+exec /root/venv/bin/python3 /mqtt_publisher.py
