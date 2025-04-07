@@ -1,6 +1,6 @@
 {
   "name": "Dabbsson MQTT Publisher",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "slug": "dabbsson_mqtt_publisher",
   "description": "Sendet DPS-Werte des DBS2300 per MQTT an Home Assistant und empfängt Schaltbefehle",
   "url": "https://github.com/kleimj1/dabbsson_mqtt_publisher",
