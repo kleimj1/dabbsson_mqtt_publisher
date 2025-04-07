@@ -23,6 +23,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Skripte und Metadaten kopieren
 COPY mqtt_publisher.py /mqtt_publisher.py
 COPY dps_metadata.py /dps_metadata.py
-COPY run.sh /run.sh
+# Kopiere s6-kompatiblen Startdienst
+COPY etc/services.d/dabbsson/run /etc/services.d/dabbsson/run
+RUN chmod +x /etc/services.d/dabbsson/run
 
 # Final CMD is omitted because s6 handles init
