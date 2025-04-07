@@ -137,7 +137,12 @@ def publish_loop():
             dps = status.get("dps", {})
             for key, value in dps.items():
                 if key in DPS_METADATA:
-                    client.publish(f"{MQTT_TOPIC}/{key}", str(value), retain=True)
+                    if isinstance(value, bool):
+                        mqtt_value = "true" if value else "false"
+                    else:
+                        mqtt_value = str(value)
+                    print(f"📡 Status-Update DPS {key} → {mqtt_value}")
+                    client.publish(f"{MQTT_TOPIC}/{key}", mqtt_value, retain=True)
                     publish_discovery(key, value)
             time.sleep(5)
         except Exception as e:
