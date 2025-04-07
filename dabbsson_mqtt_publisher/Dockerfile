@@ -24,5 +24,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY mqtt_publisher.py /mqtt_publisher.py
 COPY dps_metadata.py /dps_metadata.py
 # Kopiere s6-kompatiblen Startdienst
-CMD [ "bash" ]
+CMD ["sh", "-c", "while true; do sleep 3600; done"]
+
 
