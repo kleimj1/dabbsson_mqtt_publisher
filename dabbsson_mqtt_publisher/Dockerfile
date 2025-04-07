@@ -23,7 +23,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Skripte und Metadaten kopieren
 COPY mqtt_publisher.py /mqtt_publisher.py
 COPY dps_metadata.py /dps_metadata.py
-# Kopiere s6-kompatiblen Startdienst
-CMD ["sh", "-c", "while true; do sleep 3600; done"]
+COPY run.sh /run.sh
+
+# Rechte setzen
+RUN chmod a+x /run.sh
+
+# Start-Skript aufrufen
+CMD [ "/run.sh" ]
 
 
