@@ -1,154 +1,127 @@
 #!/usr/bin/env python3
-import os
-import time
 import json
+import time
 import threading
+import os
 import tinytuya
 import paho.mqtt.client as mqtt
-from dps_metadata import DPS_METADATA
+from dps_metadata import get_dps_metadata
 
-# Konfiguration aus Umgebungsvariablen
-DEVICE_ID = os.getenv("DEVICE_ID")
-LOCAL_KEY = os.getenv("LOCAL_KEY")
-DEVICE_IP = os.getenv("DEVICE_IP")
-MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
-MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
-MQTT_TOPIC = os.getenv("MQTT_TOPIC", "dabbsson/status")
-MQTT_COMMAND_TOPIC = os.getenv("MQTT_COMMAND_TOPIC", "dabbsson/command")
-MQTT_DISCOVERY_PREFIX = os.getenv("MQTT_DISCOVERY_PREFIX", "homeassistant")
-MQTT_USER = os.getenv("MQTT_USER", "")
-MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
+CONFIG_PATH = "/data/options.json"  # Home Assistant speichert dort config.json
 
-print("🚀 Starte Dabbsson MQTT Publisher...")
+# Konfiguration laden
+with open(CONFIG_PATH, "r") as f:
+    config = json.load(f)
 
-# Tuya-Gerät initialisieren
-try:
-    device = tinytuya.OutletDevice(DEVICE_ID, DEVICE_IP, LOCAL_KEY)
-    device.set_version(3.4)
-except Exception as e:
-    print(f"❌ Fehler beim Initialisieren des Geräts: {e}")
-    exit(1)
+devices = []
+for dev in config.get("devices", []):
+    if not dev.get("enabled"):
+        continue
+    try:
+        d = tinytuya.OutletDevice(dev["device_id"], dev["device_ip"], dev["local_key"])
+        d.set_version(3.4)
+        dev["device"] = d
+        dev["dps_metadata"] = get_dps_metadata(dev["type"])
+        devices.append(dev)
+        print(f"✅ Gerät {dev['name']} ({dev['type']}) verbunden")
+    except Exception as e:
+        print(f"❌ Fehler beim Initialisieren von {dev['name']}: {e}")
 
-# MQTT-Client vorbereiten
+MQTT_HOST = config.get("mqtt_host", "localhost")
+MQTT_PORT = config.get("mqtt_port", 1883)
+MQTT_PREFIX = config.get("mqtt_discovery_prefix", "homeassistant")
+MQTT_USER = config.get("mqtt_user", "")
+MQTT_PASSWORD = config.get("mqtt_password", "")
+
+# MQTT-Client
 client = mqtt.Client()
 if MQTT_USER:
     client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
 
-# MQTT → Discovery Payloads senden
-def publish_discovery(dps_key, value):
-    meta = DPS_METADATA.get(dps_key, {})
-    name = meta.get("name", f"DPS {dps_key}")
-    writable = meta.get("writable", False)
+def publish_discovery(device, dps_key, meta):
+    base = f"dabbsson/{device['name'].lower()}"
+    state_topic = f"{base}/dps/{dps_key}"
+    cmd_topic = f"{base}/dps/{dps_key}/set"
     dtype = meta.get("type", "str")
-    unique_id = f"dabbsson_{dps_key}"
-    state_topic = f"{MQTT_TOPIC}/{dps_key}"
+    writable = meta.get("writable", False)
 
-    device_config = {
-        "identifiers": ["dabbsson_dbs2300"],
-        "name": "Dabbsson DBS2300",
-        "model": "DBS2300",
-        "manufacturer": "Dabbsson"
+    payload = {
+        "name": meta.get("name", f"DPS {dps_key}"),
+        "unique_id": f"{base}_{dps_key}",
+        "device": {
+            "identifiers": [base],
+            "name": device["name"],
+            "model": device["type"].upper(),
+            "manufacturer": "Dabbsson"
+        },
+        "state_topic": state_topic
     }
 
     if writable:
         if dtype == "bool":
-            component = "switch"
-            payload = {
-                "state_topic": state_topic,
-                "command_topic": f"{MQTT_COMMAND_TOPIC}/{dps_key}",
-                "payload_on": "true",
-                "payload_off": "false",
-                "icon": "mdi:toggle-switch"
-            }
+            comp = "switch"
+            payload["command_topic"] = cmd_topic
+            payload["payload_on"] = "true"
+            payload["payload_off"] = "false"
         elif dtype == "int":
-            component = "number"
-            payload = {
-                "state_topic": state_topic,
-                "command_topic": f"{MQTT_COMMAND_TOPIC}/{dps_key}",
-                "min": 0,
-                "max": 1000,
-                "step": 1,
-                "icon": "mdi:counter"
-            }
-        elif dtype == "str":
-            component = "text"
-            payload = {
-                "state_topic": state_topic,
-                "command_topic": f"{MQTT_COMMAND_TOPIC}/{dps_key}",
-                "icon": "mdi:text"
-            }
+            comp = "number"
+            payload["command_topic"] = cmd_topic
+            payload["min"] = 0
+            payload["max"] = 1000
+            payload["step"] = 1
+        elif dtype == "enum":
+            comp = "select"
+            payload["command_topic"] = cmd_topic
+            payload["options"] = meta.get("options", [])
         else:
-            component = "sensor"
-            payload = {"state_topic": state_topic, "icon": "mdi:chart-box-outline"}
+            comp = "text"
+            payload["command_topic"] = cmd_topic
     else:
-        component = "sensor"
-        payload = {"state_topic": state_topic, "icon": "mdi:chart-box-outline"}
+        comp = "sensor"
 
-    # Zusätzliche Geräteklassen (für HA UI)
-    if dtype == "int" and not writable:
-        if dps_key == "10":
-            payload.update({"unit_of_measurement": "°C", "device_class": "temperature"})
-        elif dps_key in ["1", "123", "138"]:
-            payload.update({"unit_of_measurement": "%", "device_class": "battery"})
-        elif dps_key in ["105", "108"]:
-            payload.update({"unit_of_measurement": "W", "device_class": "power"})
-        elif dps_key == "145":
-            payload.update({"unit_of_measurement": "V", "device_class": "voltage"})
+    client.publish(f"{MQTT_PREFIX}/{comp}/{base}_{dps_key}/config", json.dumps(payload), retain=True)
 
-    payload.update({
-        "name": name,
-        "unique_id": unique_id,
-        "device": device_config
-    })
-
-    topic = f"{MQTT_DISCOVERY_PREFIX}/{component}/dabbsson/{dps_key}/config"
-    client.publish(topic, json.dumps(payload), retain=True)
-
-# MQTT-Callback: verbunden
-def on_connect(client, userdata, flags, rc):
-    print(f"✅ MQTT verbunden (Code {rc})")
-    client.subscribe(f"{MQTT_COMMAND_TOPIC}/#")
-
-# MQTT-Callback: neue Nachricht
+# Empfange Schaltbefehle
 def on_message(client, userdata, msg):
     try:
-        dps_key = msg.topic.split("/")[-1]
-        meta = DPS_METADATA.get(dps_key, {})
-        if not meta.get("writable"):
-            print(f"⛔️ DPS {dps_key} ist nicht beschreibbar")
-            return
-        raw = msg.payload.decode()
-        value = json.loads(raw)
-        print(f"➡️ Befehl für DPS {dps_key}: {value}")
-        print(f"📤 Sende an Gerät: set_value({dps_key}, {value})")
-        device.set_value(dps_key, value)
+        for dev in devices:
+            base = f"dabbsson/{dev['name'].lower()}/dps/"
+            if msg.topic.startswith(base):
+                dps_key = msg.topic.split("/")[-2]
+                meta = dev["dps_metadata"].get(dps_key)
+                if not meta or not meta.get("writable"):
+                    return
+                value = json.loads(msg.payload.decode())
+                if meta["type"] == "bool":
+                    value = value in ["true", True, 1]
+                print(f"➡️ Sende {value} an DPS {dps_key} ({dev['name']})")
+                dev["device"].set_value(dps_key, value)
     except Exception as e:
-        print(f"❌ Fehler beim Verarbeiten von {msg.topic}: {e}")
+        print(f"❌ Fehler bei MQTT-Befehl: {e}")
 
-client.on_connect = on_connect
+# MQTT Callback
 client.on_message = on_message
-client.connect(MQTT_HOST, MQTT_PORT, 60)
 
-# Werte regelmäßig lesen und publizieren
-def publish_loop():
+def publish_loop(device):
+    base = f"dabbsson/{device['name'].lower()}/dps"
     while True:
         try:
-            status = device.status()
-            dps = status.get("dps", {})
-            for key, value in dps.items():
-                if key in DPS_METADATA:
-                    if isinstance(value, bool):
-                        mqtt_value = "true" if value else "false"
-                    else:
-                        mqtt_value = str(value)
-                    print(f"📡 Status-Update DPS {key} → {mqtt_value}")
-                    client.publish(f"{MQTT_TOPIC}/{key}", mqtt_value, retain=True)
-                    publish_discovery(key, value)
-            time.sleep(5)
+            status = device["device"].status().get("dps", {})
+            for key, val in status.items():
+                meta = device["dps_metadata"].get(str(key))
+                if not meta:
+                    continue
+                value = "true" if val is True else "false" if val is False else str(val)
+                topic = f"{base}/{key}"
+                client.publish(topic, value, retain=True)
+                publish_discovery(device, str(key), meta)
         except Exception as e:
-            print(f"⚠️ Fehler beim Abrufen der Daten: {e}")
-            time.sleep(10)
+            print(f"⚠️ Fehler beim Abrufen von {device['name']}: {e}")
+        time.sleep(5)
 
-# Starte Schleifen
-threading.Thread(target=publish_loop, daemon=True).start()
+# Start
+client.connect(MQTT_HOST, MQTT_PORT, 60)
+client.subscribe("dabbsson/+/dps/+/set")
+for dev in devices:
+    threading.Thread(target=publish_loop, args=(dev,), daemon=True).start()
 client.loop_forever()
