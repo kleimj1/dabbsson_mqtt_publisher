@@ -57,4 +57,5 @@
   "hassio_api": false,
   "hassio_role": "default",
   "homeassistant_api": false,
-  "host_network": true_
+  "host_network": true
+}
