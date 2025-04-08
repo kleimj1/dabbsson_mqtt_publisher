@@ -1,4 +1,23 @@
 {
-    "name": "Dabbsson MQTT Publisher",
-    "description": "Add-on zur MQTT-Steuerung und -Überwachung des Dabbsson DBS2300"
+  "name": "Dabbsson MQTT Publisher",
+  "description": "Veröffentlicht DPS-Werte der Dabbsson-Geräte via MQTT und empfängt Steuerbefehle",
+  "devices": {
+    "name": "Geräte",
+    "description": "Hier kannst du deine Dabbsson-Geräte konfigurieren"
+  },
+  "mqtt_host": {
+    "name": "MQTT-Host"
+  },
+  "mqtt_port": {
+    "name": "MQTT-Port"
+  },
+  "mqtt_user": {
+    "name": "MQTT-Benutzer"
+  },
+  "mqtt_password": {
+    "name": "MQTT-Passwort"
+  },
+  "mqtt_discovery_prefix": {
+    "name": "MQTT Discovery Prefix"
   }
+}
