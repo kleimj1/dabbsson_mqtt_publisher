@@ -1,0 +1,74 @@
+{
+  "devices": {
+    "type": "list",
+    "required": true,
+    "default": [
+      {
+        "name": "DBS2300",
+        "type": "dbs2300",
+        "device_id": "",
+        "local_key": "",
+        "device_ip": "",
+        "enabled": true
+      }
+    ],
+    "items": {
+      "type": "dict",
+      "schema": {
+        "name": {
+          "type": "string",
+          "required": true,
+          "default": "DBS2300"
+        },
+        "type": {
+          "type": "select",
+          "options": ["dbs2300", "dbs600m"],
+          "required": true,
+          "default": "dbs2300"
+        },
+        "device_id": {
+          "type": "string",
+          "required": true
+        },
+        "local_key": {
+          "type": "string",
+          "required": true
+        },
+        "device_ip": {
+          "type": "string",
+          "required": true
+        },
+        "enabled": {
+          "type": "boolean",
+          "required": true,
+          "default": true
+        }
+      }
+    }
+  },
+  "mqtt_host": {
+    "type": "string",
+    "required": true,
+    "default": "core-mosquitto"
+  },
+  "mqtt_port": {
+    "type": "integer",
+    "required": true,
+    "default": 1883
+  },
+  "mqtt_discovery_prefix": {
+    "type": "string",
+    "required": true,
+    "default": "homeassistant"
+  },
+  "mqtt_user": {
+    "type": "string",
+    "required": false,
+    "default": ""
+  },
+  "mqtt_password": {
+    "type": "string",
+    "required": false,
+    "default": ""
+  }
+}
