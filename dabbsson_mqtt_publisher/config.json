@@ -1,6 +1,6 @@
 {
   "name": "Dabbsson MQTT Publisher",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "slug": "dabbsson_mqtt_publisher",
   "description": "Sendet DPS-Werte der Dabbsson-Geräte per MQTT an Home Assistant und empfängt Schaltbefehle",
   "url": "https://github.com/kleimj1/dabbsson_mqtt_publisher",
