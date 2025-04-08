@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Skripte und Metadaten kopieren
 COPY mqtt_publisher.py /mqtt_publisher.py
-COPY dps_metadata.py /dps_metadata.py
+COPY dps_metadata/ /dps_metadata/
 COPY run.sh /run.sh
 
 # Rechte setzen
@@ -30,5 +30,3 @@ RUN chmod a+x /run.sh
 
 # Start-Skript aufrufen
 CMD [ "/run.sh" ]
-
-
