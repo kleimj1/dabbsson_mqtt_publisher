@@ -24,8 +24,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY mqtt_publisher.py /mqtt_publisher.py
 COPY dps_metadata/ /dps_metadata/
 COPY run.sh /run.sh
-
-# Discovery-Skripte kopieren
 COPY default_scripts/ /default_scripts/
 
 # Rechte setzen
