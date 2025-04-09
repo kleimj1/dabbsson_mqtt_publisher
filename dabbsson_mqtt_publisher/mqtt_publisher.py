@@ -38,6 +38,7 @@ if MQTT_USER:
     client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
 
 def publish_discovery(device, dps_key, meta):
+    print(f"📣 Sende Discovery für {payload['name']} auf {MQTT_PREFIX}/{comp}/{base}_{dps_key}/config")
     base = f"dabbsson/{device['name'].lower()}"
     state_topic = f"{base}/dps/{dps_key}"
     cmd_topic = f"{base}/dps/{dps_key}/set"
@@ -142,5 +143,6 @@ for dev in devices:
 
 # Discovery beim Start
 publish_all_discoveries()
+print("🧪 Starte MQTT Loop...")
 
 client.loop_forever()
