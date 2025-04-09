@@ -25,6 +25,9 @@ COPY mqtt_publisher.py /mqtt_publisher.py
 COPY dps_metadata/ /dps_metadata/
 COPY run.sh /run.sh
 
+# Discovery-Skripte kopieren
+COPY default_scripts/ /default_scripts/
+
 # Rechte setzen
 RUN chmod a+x /run.sh
 
