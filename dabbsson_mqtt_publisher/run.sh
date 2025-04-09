@@ -1,4 +1,9 @@
 #!/bin/sh
+#!/usr/bin/with-contenv bashio
+
+echo "📄 Erzeuge Dabbsson Discovery-Skript in Home Assistant scripts/"
+
+cp /default_scripts/mqtt_discovery_refresh.yaml /config/scripts/mqtt_discovery_refresh.yaml || echo "⚠️ Konnte Script nicht kopieren!"
 
 # Konfiguration aus /data/options.json setzen
 export DEVICE_ID=$(jq -r .device_id /data/options.json)
