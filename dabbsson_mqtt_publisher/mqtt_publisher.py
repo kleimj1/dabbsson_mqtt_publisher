@@ -30,7 +30,7 @@ MQTT_PREFIX = config.get("mqtt_discovery_prefix", "homeassistant")
 MQTT_USER = config.get("mqtt_user", "")
 MQTT_PASSWORD = config.get("mqtt_password", "")
 
-client = mqtt.Client("dabbsson-publisher")
+client = mqtt.Client(callback_api_version=5)
 if MQTT_USER:
     client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
 
