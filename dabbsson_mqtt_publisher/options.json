@@ -1,0 +1,27 @@
+{
+  "devices": [
+    {
+      "name": "DBS2300",
+      "type": "dbs2300",
+      "device_id": "bf7be7dd94a4664017zyd4",
+      "local_key": "yn^gA(Y;aN_@W)}T",
+      "device_ip": "192.168.178.30",
+      "enabled": true,
+      "suffix": "v2300"
+    },
+    {
+      "name": "DBS600M",
+      "type": "dbs600m",
+      "device_id": "bf28bf3ed017383871f17q",
+      "local_key": "}(pCoik2dn&t[n<j",
+      "device_ip": "192.168.178.43",
+      "enabled": true,
+      "suffix": "v600"
+    }
+  ],
+  "mqtt_host": "core-mosquitto",
+  "mqtt_port": 1883,
+  "mqtt_discovery_prefix": "homeassistant",
+  "mqtt_user": "mqttadmin",
+  "mqtt_password": "Hfsc7110t"
+}
