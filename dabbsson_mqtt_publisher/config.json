@@ -39,7 +39,7 @@
     "devices": [
       {
         "name": "str",
-        "type": "select(dbs2300|dbs600m)",
+        "type": "str",
         "device_id": "str",
         "local_key": "str",
         "device_ip": "str",
