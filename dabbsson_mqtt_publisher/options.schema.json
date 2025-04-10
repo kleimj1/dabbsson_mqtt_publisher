@@ -10,7 +10,7 @@
         "local_key": "",
         "device_ip": "",
         "enabled": true,
-        "suffix": ""
+        "suffix": "v2300"
       }
     ],
     "items": {
@@ -22,10 +22,10 @@
           "default": "DBS2300"
         },
         "type": {
-          "type": "select",
-          "options": ["dbs2300", "dbs600m"],
+          "type": "string",
           "required": true,
-          "default": "dbs2300"
+          "default": "dbs2300",
+          "values": ["dbs2300", "dbs600m"]
         },
         "device_id": {
           "type": "string",
@@ -46,8 +46,7 @@
         },
         "suffix": {
           "type": "string",
-          "required": false,
-          "default": ""
+          "required": false
         }
       }
     }
