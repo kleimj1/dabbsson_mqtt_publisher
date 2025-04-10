@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import json, time, threading
+import json, time, threading, os
 import tinytuya
 import paho.mqtt.client as mqtt
 from dps_metadata import get_dps_metadata
@@ -18,9 +18,9 @@ for dev in config.get("devices", []):
         d.set_version(3.4)
         dev["device"] = d
         dev["dps_metadata"] = get_dps_metadata(dev["type"])
-        dev["suffix"] = dev.get("suffix", "").lower()
+        dev["suffix"] = dev.get("suffix", "")
         devices.append(dev)
-        print(f"✅ Gerät {dev['name']} ({dev['type']}) verbunden")
+        print(f"✅ Gerät {dev['name']} ({dev['type']}) verbunden mit Suffix '{dev['suffix']}'")
     except Exception as e:
         print(f"❌ Fehler beim Initialisieren von {dev['name']}: {e}")
 
@@ -34,22 +34,20 @@ client = mqtt.Client()
 if MQTT_USER:
     client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
 
-def get_base_name(device):
-    suffix = f"-{device['suffix']}" if device.get("suffix") else ""
-    return f"dabbsson/{device['name'].lower()}{suffix}"
-
 def publish_discovery(device, dps_key, meta):
-    base = get_base_name(device)
+    suffix = device.get("suffix", "").lower()
+    devname = device['name'].lower()
+    base = f"dabbsson/{devname}_{suffix}"
     state_topic = f"{base}/dps/{dps_key}"
     cmd_topic = f"{base}/dps/{dps_key}/set"
     dtype = meta.get("type", "str")
     writable = meta.get("writable", False)
 
     payload = {
-        "name": meta.get("name", f"DPS {dps_key}"),
+        "name": f"{device['name']} {meta.get('name', f'DPS {dps_key}')}",
         "unique_id": f"{base}_{dps_key}",
         "device": {
-            "identifiers": [base],
+            "identifiers": [f"{base}"],
             "name": device["name"],
             "model": device["type"].upper(),
             "manufacturer": "Dabbsson"
@@ -86,12 +84,15 @@ def publish_discovery(device, dps_key, meta):
         comp = "sensor"
 
     topic = f"{MQTT_PREFIX}/{comp}/{base}_{dps_key}/config"
+    print(f"🛰️ MQTT Discovery: {topic}")
+    print(f"   → Payload: {json.dumps(payload)}")
     client.publish(topic, json.dumps(payload), retain=True)
 
 def on_message(client, userdata, msg):
     try:
         for dev in devices:
-            base = get_base_name(dev) + "/dps/"
+            suffix = dev.get("suffix", "").lower()
+            base = f"dabbsson/{dev['name'].lower()}_{suffix}/dps/"
             if msg.topic.startswith(base):
                 dps_key = msg.topic.split("/")[-2]
                 meta = dev["dps_metadata"].get(dps_key)
@@ -100,7 +101,7 @@ def on_message(client, userdata, msg):
                 value = json.loads(msg.payload.decode())
                 if meta["type"] == "bool":
                     value = value in ["true", True, 1]
-                print(f"➡️ Sende {value} an DPS {dps_key} ({dev['name']})")
+                print(f"➡️ Empfange MQTT-Befehl: {value} an DPS {dps_key} ({dev['name']})")
                 dev["device"].set_value(dps_key, value)
     except Exception as e:
         print(f"❌ Fehler bei MQTT-Befehl: {e}")
@@ -108,7 +109,11 @@ def on_message(client, userdata, msg):
 client.on_message = on_message
 
 def publish_loop(device):
-    base = get_base_name(device) + "/dps"
+    suffix = device.get("suffix", "").lower()
+    base = f"dabbsson/{device['name'].lower()}_{suffix}/dps"
+    dps_meta = device["dps_metadata"]
+    print(f"📡 Starte Publish-Loop für {device['name']} mit {len(dps_meta)} DPS-Einträgen")
+
     while True:
         try:
             status = device["device"].status().get("dps", {})
@@ -118,6 +123,7 @@ def publish_loop(device):
                     continue
                 value = "true" if val is True else "false" if val is False else str(val)
                 topic = f"{base}/{key}"
+                print(f"📤 MQTT Sende: {topic} → {value}")
                 client.publish(topic, value, retain=True)
                 publish_discovery(device, str(key), meta)
         except Exception as e:
@@ -126,6 +132,7 @@ def publish_loop(device):
 
 client.connect(MQTT_HOST, MQTT_PORT, 60)
 client.subscribe("dabbsson/+/dps/+/set")
+print("🔁 MQTT Loop startet...")
 for dev in devices:
     threading.Thread(target=publish_loop, args=(dev,), daemon=True).start()
 client.loop_forever()
