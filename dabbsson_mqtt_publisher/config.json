@@ -1,6 +1,6 @@
 {
   "name": "Dabbsson MQTT Publisher",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "slug": "dabbsson_mqtt_publisher",
   "description": "Sendet DPS-Werte der Dabbsson-Geräte per MQTT an Home Assistant und empfängt Schaltbefehle",
   "url": "https://github.com/kleimj1/dabbsson_mqtt_publisher",
@@ -16,7 +16,8 @@
         "device_id": "",
         "local_key": "",
         "device_ip": "",
-        "enabled": true
+        "enabled": true,
+        "suffix": ""
       },
       {
         "name": "DBS600M",
@@ -24,7 +25,8 @@
         "device_id": "",
         "local_key": "",
         "device_ip": "",
-        "enabled": false
+        "enabled": false,
+        "suffix": "v2"
       }
     ],
     "mqtt_host": "core-mosquitto",
@@ -37,11 +39,12 @@
     "devices": [
       {
         "name": "str",
-        "type": "str",
+        "type": "select(dbs2300|dbs600m)",
         "device_id": "str",
         "local_key": "str",
         "device_ip": "str",
-        "enabled": "bool"
+        "enabled": "bool",
+        "suffix": "str?"
       }
     ],
     "mqtt_host": "str",
