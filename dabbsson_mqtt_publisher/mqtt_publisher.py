@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import json, time, threading, os
+import json, time, threading
 import tinytuya
 import paho.mqtt.client as mqtt
 from dps_metadata import get_dps_metadata
@@ -18,6 +18,7 @@ for dev in config.get("devices", []):
         d.set_version(3.4)
         dev["device"] = d
         dev["dps_metadata"] = get_dps_metadata(dev["type"])
+        dev["suffix"] = dev.get("suffix", "").lower()
         devices.append(dev)
         print(f"✅ Gerät {dev['name']} ({dev['type']}) verbunden")
     except Exception as e:
@@ -33,8 +34,12 @@ client = mqtt.Client()
 if MQTT_USER:
     client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
 
+def get_base_name(device):
+    suffix = f"-{device['suffix']}" if device.get("suffix") else ""
+    return f"dabbsson/{device['name'].lower()}{suffix}"
+
 def publish_discovery(device, dps_key, meta):
-    base = f"dabbsson/{device['name'].lower()}"
+    base = get_base_name(device)
     state_topic = f"{base}/dps/{dps_key}"
     cmd_topic = f"{base}/dps/{dps_key}/set"
     dtype = meta.get("type", "str")
@@ -86,7 +91,7 @@ def publish_discovery(device, dps_key, meta):
 def on_message(client, userdata, msg):
     try:
         for dev in devices:
-            base = f"dabbsson/{dev['name'].lower()}/dps/"
+            base = get_base_name(dev) + "/dps/"
             if msg.topic.startswith(base):
                 dps_key = msg.topic.split("/")[-2]
                 meta = dev["dps_metadata"].get(dps_key)
@@ -103,7 +108,7 @@ def on_message(client, userdata, msg):
 client.on_message = on_message
 
 def publish_loop(device):
-    base = f"dabbsson/{device['name'].lower()}/dps"
+    base = get_base_name(device) + "/dps"
     while True:
         try:
             status = device["device"].status().get("dps", {})
