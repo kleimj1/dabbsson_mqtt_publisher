@@ -105,8 +105,20 @@ def on_message(client, userdata, msg):
                     value = value in ["true", True, 1]
                 print(f"➡️ Empfange MQTT-Befehl: {value} an DPS {dps_key} ({dev['name']})")
                 dev["device"].set_value(dps_key, value)
+
+        # 🔁 Manuelle Discovery auslösen
+        if msg.topic == "dabbsson/command/trigger_discovery":
+            print("🔄 Manuelle MQTT Discovery ausgelöst")
+            for dev in devices:
+                dps = dev["device"].status().get("dps", {})
+                for key in dps:
+                    meta = dev["dps_metadata"].get(str(key))
+                    if meta:
+                        publish_discovery(dev, str(key), meta)
+
     except Exception as e:
         print(f"❌ Fehler bei MQTT-Befehl: {e}")
+
 
 client.on_message = on_message
 
