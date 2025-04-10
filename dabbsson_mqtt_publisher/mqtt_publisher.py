@@ -30,14 +30,14 @@ MQTT_PREFIX = config.get("mqtt_discovery_prefix", "homeassistant")
 MQTT_USER = config.get("mqtt_user", "")
 MQTT_PASSWORD = config.get("mqtt_password", "")
 
-client = mqtt.Client()
+client = mqtt.Client("dabbsson-publisher")
 if MQTT_USER:
     client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
 
 def publish_discovery(device, dps_key, meta):
     suffix = device.get("suffix", "").lower()
     devname = device['name'].lower()
-    base = f"dabbsson/{devname}_{suffix}"
+    base = f"dabbsson/{devname}_{suffix}".strip("_")
     state_topic = f"{base}/dps/{dps_key}"
     cmd_topic = f"{base}/dps/{dps_key}/set"
     dtype = meta.get("type", "str")
@@ -48,7 +48,7 @@ def publish_discovery(device, dps_key, meta):
         "unique_id": f"{base}_{dps_key}",
         "device": {
             "identifiers": [f"{base}"],
-            "name": device["name"],
+            "name": f"{device['name']} {suffix}".strip(),
             "model": device["type"].upper(),
             "manufacturer": "Dabbsson"
         },
@@ -110,7 +110,7 @@ client.on_message = on_message
 
 def publish_loop(device):
     suffix = device.get("suffix", "").lower()
-    base = f"dabbsson/{device['name'].lower()}_{suffix}/dps"
+    base = f"dabbsson/{device['name'].lower()}_{suffix}/dps".strip("_")
     dps_meta = device["dps_metadata"]
     print(f"📡 Starte Publish-Loop für {device['name']} mit {len(dps_meta)} DPS-Einträgen")
 
