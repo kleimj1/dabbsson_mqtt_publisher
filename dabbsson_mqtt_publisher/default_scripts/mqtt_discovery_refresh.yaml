@@ -1,7 +1,8 @@
-alias: 🔄 MQTT Discovery Refresh (Dabbsson)
-mode: single
-sequence:
-  - service: mqtt.publish
-    data:
-      topic: dabbsson/command/trigger_discovery
-      payload: "true"
+mqtt_discovery_refresh:
+  alias: 🔄 MQTT Discovery Refresh (Dabbsson)
+  sequence:
+    - service: mqtt.publish
+      data:
+        topic: dabbsson/command/trigger_discovery
+        payload: "true"
+  mode: single
