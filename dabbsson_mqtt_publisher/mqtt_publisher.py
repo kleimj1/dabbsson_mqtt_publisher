@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
-import json
-import time
-import threading
-import os
+import json, time, threading, os
 import tinytuya
 import paho.mqtt.client as mqtt
 from dps_metadata import get_dps_metadata
 
 CONFIG_PATH = "/data/options.json"
 
-# Konfiguration laden
 with open(CONFIG_PATH, "r") as f:
     config = json.load(f)
 
@@ -38,7 +34,6 @@ if MQTT_USER:
     client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
 
 def publish_discovery(device, dps_key, meta):
-    print(f"📣 Sende Discovery für {payload['name']} auf {MQTT_PREFIX}/{comp}/{base}_{dps_key}/config")
     base = f"dabbsson/{device['name'].lower()}"
     state_topic = f"{base}/dps/{dps_key}"
     cmd_topic = f"{base}/dps/{dps_key}/set"
@@ -60,19 +55,25 @@ def publish_discovery(device, dps_key, meta):
     if writable:
         if dtype == "bool":
             comp = "switch"
-            payload["command_topic"] = cmd_topic
-            payload["payload_on"] = "true"
-            payload["payload_off"] = "false"
+            payload.update({
+                "command_topic": cmd_topic,
+                "payload_on": "true",
+                "payload_off": "false"
+            })
         elif dtype == "int":
             comp = "number"
-            payload["command_topic"] = cmd_topic
-            payload["min"] = meta.get("min", 0)
-            payload["max"] = meta.get("max", 1000)
-            payload["step"] = meta.get("step", 1)
+            payload.update({
+                "command_topic": cmd_topic,
+                "min": 0,
+                "max": 1000,
+                "step": 1
+            })
         elif dtype == "enum":
             comp = "select"
-            payload["command_topic"] = cmd_topic
-            payload["options"] = meta.get("options", [])
+            payload.update({
+                "command_topic": cmd_topic,
+                "options": meta.get("options", [])
+            })
         else:
             comp = "text"
             payload["command_topic"] = cmd_topic
@@ -82,27 +83,12 @@ def publish_discovery(device, dps_key, meta):
     topic = f"{MQTT_PREFIX}/{comp}/{base}_{dps_key}/config"
     client.publish(topic, json.dumps(payload), retain=True)
 
-def publish_all_discoveries():
-    for dev in devices:
-        status = dev["device"].status().get("dps", {})
-        for key in status:
-            meta = dev["dps_metadata"].get(str(key))
-            if meta:
-                publish_discovery(dev, str(key), meta)
-
-# Empfange Schaltbefehle
 def on_message(client, userdata, msg):
     try:
-        topic = msg.topic
-        if topic == "dabbsson/command/trigger_discovery":
-            print("🔄 MQTT Discovery manuell ausgelöst")
-            publish_all_discoveries()
-            return
-
         for dev in devices:
             base = f"dabbsson/{dev['name'].lower()}/dps/"
-            if topic.startswith(base):
-                dps_key = topic.split("/")[-2]
+            if msg.topic.startswith(base):
+                dps_key = msg.topic.split("/")[-2]
                 meta = dev["dps_metadata"].get(dps_key)
                 if not meta or not meta.get("writable"):
                     return
@@ -128,21 +114,13 @@ def publish_loop(device):
                 value = "true" if val is True else "false" if val is False else str(val)
                 topic = f"{base}/{key}"
                 client.publish(topic, value, retain=True)
+                publish_discovery(device, str(key), meta)
         except Exception as e:
             print(f"⚠️ Fehler beim Abrufen von {device['name']}: {e}")
         time.sleep(5)
 
-# Start
 client.connect(MQTT_HOST, MQTT_PORT, 60)
 client.subscribe("dabbsson/+/dps/+/set")
-client.subscribe("dabbsson/command/trigger_discovery")
-
-# Starte Publish-Threads
 for dev in devices:
     threading.Thread(target=publish_loop, args=(dev,), daemon=True).start()
-
-# Discovery beim Start
-publish_all_discoveries()
-print("🧪 Starte MQTT Loop...")
-
 client.loop_forever()
