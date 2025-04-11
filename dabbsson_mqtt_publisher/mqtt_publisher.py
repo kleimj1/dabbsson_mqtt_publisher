@@ -26,7 +26,7 @@ print("🚀 Starte Dabbsson MQTT Publisher...")
 # Tuya-Gerät initialisieren
 try:
     device = tinytuya.OutletDevice(DEVICE_ID, DEVICE_IP, LOCAL_KEY)
-    device.set_version(3.3)
+    device.set_version(3.4)
 except Exception as e:
     print(f"❌ Fehler beim Initialisieren des Geräts: {e}")
     exit(1)
