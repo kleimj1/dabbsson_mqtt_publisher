@@ -6,6 +6,8 @@ import threading
 import tinytuya
 import paho.mqtt.client as mqtt
 from dps_metadata import DPS_METADATA
+import tinytuya
+tinytuya.set_debug()
 
 # Umgebungsvariablen laden
 DEVICE_ID = os.getenv("DEVICE_ID")
@@ -24,7 +26,7 @@ print("🚀 Starte Dabbsson MQTT Publisher...")
 # Tuya-Gerät initialisieren
 try:
     device = tinytuya.OutletDevice(DEVICE_ID, DEVICE_IP, LOCAL_KEY)
-    device.set_version(3.4)
+    device.set_version(3.3)
 except Exception as e:
     print(f"❌ Fehler beim Initialisieren des Geräts: {e}")
     exit(1)
