@@ -7,7 +7,7 @@ import tinytuya
 import paho.mqtt.client as mqtt
 from dps_metadata import DPS_METADATA
 import tinytuya
-tinytuya.set_debug()
+#tinytuya.set_debug()
 
 # Umgebungsvariablen laden
 DEVICE_ID = os.getenv("DEVICE_ID")
